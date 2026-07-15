@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Die Schatztruhe der Erinnerungen</title>
+<style>
+  :root {
+    --bg1:#160d22; --bg2:#2a1533; --bg3:#48203f;
+    --card:rgba(255,255,255,.06); --edge:rgba(255,255,255,.16);
+    --ink:#fbeef4; --soft:#d8c2d0; --dim:#9a8598;
+    --gold:#f4c46a; --gold2:#ffe6a8; --rose:#ff7fa5; --rose2:#ff4f83;
+    --ok:#8ce0b0; --bad:#ff8080;
+    --shadow:0 24px 70px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); line-height:1.6; min-height:100vh; overflow-x:hidden;
+    background:radial-gradient(1200px 700px at 50% -10%,#5a2a4d 0%,transparent 60%),
+               linear-gradient(160deg,var(--bg1),var(--bg2) 55%,var(--bg3));
+    background-attachment:fixed;
+  }
+  #sky{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+  .floatie{position:absolute;bottom:-40px;opacity:0;animation:rise linear infinite;
+    filter:drop-shadow(0 0 6px rgba(255,143,171,.5))}
+  @keyframes rise{0%{transform:translateY(0) scale(.8);opacity:0}10%{opacity:.85}90%{opacity:.6}
+    100%{transform:translateY(-112vh) scale(1.1);opacity:0}}
+  .wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:28px 18px 90px;
+    display:flex;flex-direction:column;min-height:100vh}
+  header.top{text-align:center;margin-bottom:10px}
+  .title{font-family:Georgia,serif;font-size:clamp(26px,6.5vw,42px);margin:6px 0 2px;letter-spacing:.5px;
+    background:linear-gradient(90deg,var(--rose),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .subtitle{color:var(--soft);font-style:italic;font-size:14px;margin:0}
+
+  .card{background:var(--card);border:1px solid var(--edge);border-radius:20px;padding:24px 22px;
+    box-shadow:var(--shadow);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    animation:in .5s ease both}
+  @keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+  /* hub */
+  .lockgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:6px}
+  .lockcard{background:var(--card);border:1px solid var(--edge);border-radius:16px;padding:18px 14px;text-align:center;
+    cursor:pointer;transition:transform .12s,border-color .2s,box-shadow .2s;position:relative}
+  .lockcard:hover{transform:translateY(-3px);border-color:var(--rose);box-shadow:0 10px 30px rgba(255,79,131,.2)}
+  .lockcard .ic{font-size:34px;display:block;margin-bottom:6px}
+  .lockcard .nm{font-size:14px;color:var(--soft)}
+  .lockcard .st{margin-top:8px;font-size:13px;font-weight:600}
+  .lockcard.done{border-color:rgba(140,224,176,.5)}
+  .lockcard.done .st{color:var(--ok)}
+  .lockcard .st.locked{color:var(--dim)}
+  .badge{position:absolute;top:8px;right:10px;font-size:20px}
+
+  .chest-hub{margin-top:18px;text-align:center;padding:20px}
+  .chest-emoji{font-size:56px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.4))}
+  .prog{color:var(--soft);font-size:14px;margin:6px 0 12px}
+
+  /* buttons */
+  button{font:inherit;cursor:pointer;border:none;border-radius:12px;padding:12px 20px;font-weight:600;
+    color:#3a1226;background:linear-gradient(90deg,var(--rose),var(--rose2));transition:transform .12s,filter .2s}
+  button:hover{filter:brightness(1.08)} button:active{transform:scale(.97)}
+  button:disabled{opacity:.5;cursor:default;filter:none}
+  button.ghost{background:transparent;color:var(--soft);border:1px solid var(--edge);font-weight:500;padding:9px 15px;font-size:14px}
+  button.gold{background:linear-gradient(90deg,var(--gold),var(--gold2));color:#4a3410}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .spacer{flex:1}
+
+  input[type=text],input[type=tel]{padding:12px 14px;font-size:16px;border-radius:12px;border:1px solid var(--edge);
+    background:rgba(0,0,0,.28);color:var(--ink);outline:none;min-width:0}
+  input:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(255,127,165,.22)}
+
+  .chap{color:var(--gold);font-size:12px;letter-spacing:2px;text-transform:uppercase;margin:0 0 2px}
+  .card h2{font-family:Georgia,serif;font-size:clamp(20px,4.6vw,28px);margin:0 0 12px}
+  .story{color:var(--soft);font-size:15px;margin:0 0 16px;white-space:pre-line}
+  .task{font-weight:600;font-size:16px;margin:0 0 14px}
+  .feedback{min-height:22px;margin:12px 2px 0;font-size:15px}
+  .feedback.bad{color:var(--rose);animation:shake .4s}
+  .feedback.ok{color:var(--ok)}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .hint-box{margin-top:12px;padding:12px 14px;border-radius:12px;background:rgba(244,196,106,.12);
+    border:1px solid rgba(244,196,106,.3);color:var(--gold);font-size:14px}
+  .prize{margin-top:16px;text-align:center;font-size:18px;color:var(--ok);font-weight:700}
+  .prize .digit{display:inline-block;font-family:Georgia,serif;font-size:44px;color:var(--gold);
+    margin-top:4px;text-shadow:0 0 18px rgba(244,196,106,.6)}
+
+  /* cipher wheel */
+  .wheelwrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .disk{touch-action:none;user-select:none}
+  .cipher-io{width:100%;font-family:"Courier New",monospace;font-size:15px;letter-spacing:1px;word-spacing:4px}
+  .cipher-io .lbl{color:var(--dim);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+  .cipher-io .ct{color:var(--soft);background:rgba(0,0,0,.25);padding:10px;border-radius:10px;margin:4px 0 12px;word-break:break-word}
+  .cipher-io .pt{color:var(--gold2);background:rgba(0,0,0,.25);padding:10px;border-radius:10px;word-break:break-word;min-height:1.5em}
+
+  /* jigsaw */
+  .jig{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:min(330px,86vw);aspect-ratio:1;margin:0 auto;
+    background:rgba(0,0,0,.3);padding:4px;border-radius:12px}
+  .tile{border-radius:6px;background-size:300% 300%;background-repeat:no-repeat;cursor:pointer;position:relative;
+    transition:transform .15s,outline-color .15s;outline:2px solid transparent}
+  .tile.sel{outline-color:var(--gold);z-index:2}
+  .jig-overlay{position:relative;width:min(330px,86vw);margin:6px auto 0;text-align:center}
+
+  /* flashlight */
+  .torch{position:relative;width:100%;height:340px;border-radius:14px;overflow:hidden;
+    background:#0a0710;cursor:none;touch-action:none;border:1px solid var(--edge)}
+  .torch .num{position:absolute;font-weight:800;font-size:30px;transform:translate(-50%,-50%)}
+  .torch .num.gold{color:var(--gold);text-shadow:0 0 10px rgba(244,196,106,.8)}
+  .torch .num.red{color:#ff6b6b;text-shadow:0 0 10px rgba(255,80,80,.7)}
+  .torch .cover{position:absolute;inset:0;background:#060409;
+    -webkit-mask-image:radial-gradient(circle 82px at var(--x,-999px) var(--y,-999px),transparent 0 76px,#000 82px);
+    mask-image:radial-gradient(circle 82px at var(--x,-999px) var(--y,-999px),transparent 0 76px,#000 82px)}
+  .torch .beam{position:absolute;width:164px;height:164px;border-radius:50%;left:var(--x,-999px);top:var(--y,-999px);
+    transform:translate(-50%,-50%);pointer-events:none;
+    background:radial-gradient(circle,rgba(255,240,200,.18),transparent 70%);box-shadow:0 0 40px rgba(255,240,200,.15)}
+  /* smaller, harder-to-search beam */
+  .torch.hard .cover{
+    -webkit-mask-image:radial-gradient(circle 56px at var(--x,-999px) var(--y,-999px),transparent 0 50px,#000 56px);
+    mask-image:radial-gradient(circle 56px at var(--x,-999px) var(--y,-999px),transparent 0 50px,#000 56px)}
+  .torch.hard .beam{width:112px;height:112px}
+  .torch .num sub{vertical-align:sub}
+
+  /* constellation */
+  .constel{width:100%;border-radius:14px;background:linear-gradient(180deg,#0a0a1e,#151533);border:1px solid var(--edge);touch-action:manipulation}
+  .constel .star{cursor:pointer;transition:r .2s}
+  .constel .star:hover{filter:brightness(1.4)}
+
+  /* algebra */
+  .eq{font-size:26px;text-align:center;margin:8px 0;letter-spacing:2px}
+  .eq .q{color:var(--gold)}
+
+  /* chest / finale */
+  .center{text-align:center}
+  .dials{display:flex;gap:8px;justify-content:center;margin:16px 0}
+  .dials input{width:52px;height:64px;text-align:center;font-size:30px;font-family:Georgia,serif;
+    background:rgba(0,0,0,.3);border:1px solid var(--edge);border-radius:12px;color:var(--gold2)}
+  .big-heart{font-size:64px;animation:beat 1.4s ease-in-out infinite}
+  @keyframes beat{0%,100%{transform:scale(1)}15%{transform:scale(1.2)}30%{transform:scale(1)}45%{transform:scale(1.15)}}
+  .finale-line{font-family:Georgia,serif;font-size:clamp(32px,9vw,58px);margin:10px 0;
+    background:linear-gradient(90deg,var(--rose),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .finale-note{color:var(--soft);font-size:16px;font-style:italic;max-width:520px;margin:8px auto 0;white-space:pre-line}
+  .photo{width:100%;max-width:420px;border-radius:14px;border:1px solid var(--edge);display:block;margin:0 auto 16px}
+  .footer{margin-top:auto;padding-top:24px;text-align:center}
+  .reset{color:var(--dim);font-size:12px;cursor:pointer;text-decoration:underline;background:none;border:none;padding:6px}
+  .hidden{display:none!important}
+  .note-small{color:var(--dim);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<div class="wrap">
+  <header class="top">
+    <div style="font-size:30px">🔐</div>
+    <h1 class="title">Die Schatztruhe der Erinnerungen</h1>
+    <p class="subtitle">Fünf Schlösser · fünf Rätsel · von Martin für Anni</p>
+  </header>
+  <main id="app"></main>
+  <div class="footer"><button class="reset" id="resetBtn">Spiel zurücksetzen</button></div>
+</div>
+
+<script>
+"use strict";
+/* ================================================================= *
+ *  DIE SCHATZTRUHE DER ERINNERUNGEN  —  ein echtes Escape-Game
+ *  Jedes der 5 Schlösser liefert eine Ziffer. Zusammen ergeben sie
+ *  den Code der Truhe (Reihenfolge = Schloss 1 → 5).
+ *  Lösungen: 1)6  2)9  3)4  4)8  5)7   →  Code 69487
+ * ================================================================= */
+const CODE = "69487";
+const LOCKS = [
+  { id:1, icon:"✉️", name:"Der verschlüsselte Brief", digit:6,
+    hints:["Der Schlüssel steht nicht im Klartext da – das Gedicht ist der Trick. Schau die Zeilenanfänge an und lies senkrecht (ein Akrostichon).",
+           "Die ersten Buchstaben der Zeilen ergeben von oben nach unten F-E-R-N-W-E-H. Das Schlüsselwort ist FERNWEH. Der entschlüsselte Brief nennt dann: die Zahl der Seiten eines Würfels."] },
+  { id:2, icon:"🧩", name:"Das zerbrochene Bild", digit:9,
+    hints:["Tippe eine Kachel an (sie wird markiert), dann eine zweite – sie tauschen den Platz.",
+           "Mit „↻ drehen“ drehst du die markierte Kachel. Erst wenn alle richtig liegen UND richtig gedreht sind, ist es gelöst."] },
+  { id:3, icon:"🔦", name:"Licht im Dunkeln", digit:4,
+    hints:["Es sind goldene UND rote Zeichen versteckt – und irgendwo eine Regel. Leuchte wirklich jede Ecke ab, der Lichtkegel ist klein.",
+           "Ignoriere die roten Buchstaben. Lies nur die goldenen – in der Reihenfolge ihrer kleinen hochgestellten Zahlen. Sie ergeben ein Wort, das eine Zahl ist."] },
+  { id:4, icon:"✨", name:"Das Sternbild", digit:8,
+    hints:["Die fünf Sterne sind unterschiedlich groß = unterschiedlich hell. Verbinde sie in der Reihenfolge ihrer Helligkeit, vom hellsten zum dunkelsten.",
+           "Reihenfolge: der große Stern unten zuerst, dann links, dann oben, dann rechts, zuletzt der kleine in der Mitte. Ein Fehler setzt die Linie zurück."] },
+  { id:5, icon:"❤️", name:"Die Gleichung der Liebe", digit:7,
+    hints:["Finde erst den Wert des Monds, dann des Sterns, dann des Herzens.",
+           "🌙+🌙=8 → 🌙=4.  🌙+⭐=7 → ⭐=3.  ⭐×❤=21 → ❤=?"] },
+];
+
+/* ---------- state ---------- */
+const STORE = "schatztruhe-v1";
+let state = loadState();
+function loadState(){ try{ return JSON.parse(localStorage.getItem(STORE)) || {solved:{}}; }catch(e){ return {solved:{}}; } }
+function saveState(){ localStorage.setItem(STORE, JSON.stringify(state)); }
+function isSolved(id){ return !!state.solved[id]; }
+function solvedCount(){ return LOCKS.filter(l=>isSolved(l.id)).length; }
+function markSolved(id){ state.solved[id]=true; saveState(); }
+
+/* ---------- tiny DOM helpers ---------- */
+const app = document.getElementById("app");
+function el(tag, cls, html){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
+function clear(){ app.innerHTML=""; }
+/* try a list of image URLs in order; callback gets the first that loads, or null */
+function firstImage(urls, cb){
+  let i=0;
+  (function tryNext(){
+    if(i>=urls.length){ cb(null); return; }
+    const url=urls[i++], img=new Image();
+    img.onload=()=>cb(url); img.onerror=tryNext; img.src=url;
+  })();
+}
+
+/* ---------- URL params (reset / jump-to-view for testing) ---------- */
+const params = new URLSearchParams(location.search);
+if(params.get("reset")!==null){ localStorage.removeItem(STORE); state={solved:{}}; }
+if(params.get("solveall")!==null){ LOCKS.forEach(l=>state.solved[l.id]=true); }
+
+/* ================================================================= *
+ *  HUB
+ * ================================================================= */
+function renderHub(){
+  clear();
+  const card = el("div","card");
+  card.appendChild(el("p","story",
+    "Ich habe unsere schönsten Erinnerungen in dieser Truhe eingeschlossen.\n"+
+    "Fünf Schlösser bewachen sie – jedes verbirgt eine Ziffer. Knack alle fünf,\n"+
+    "setze die Ziffern in der richtigen Reihenfolge zusammen und öffne die Truhe. 💗"));
+  const grid = el("div","lockgrid");
+  LOCKS.forEach(l=>{
+    const c = el("div","lockcard"+(isSolved(l.id)?" done":""));
+    c.innerHTML = `<span class="badge">${isSolved(l.id)?"✅":"🔒"}</span>
+      <span class="ic">${l.icon}</span><span class="nm">Schloss ${l.id}<br>${l.name}</span>
+      <div class="st ${isSolved(l.id)?"":"locked"}">${isSolved(l.id)?("Ziffer: "+l.digit):"verschlossen"}</div>`;
+    c.onclick = ()=>openLock(l.id);
+    grid.appendChild(c);
+  });
+  card.appendChild(grid);
+
+  const chest = el("div","chest-hub");
+  const done = solvedCount();
+  chest.innerHTML = `<div class="chest-emoji">${done===5?"🎁":"🧰"}</div>
+    <div class="prog">${done} von 5 Schlössern geknackt</div>`;
+  const btn = el("button", done===5?"gold":"ghost", done===5?"🔓 Die Truhe öffnen":"Truhe (erst alle Schlösser knacken)");
+  btn.onclick = ()=>openChest();
+  chest.appendChild(btn);
+  card.appendChild(chest);
+
+  app.appendChild(card);
+  scrollTop();
+}
+
+/* shared puzzle shell: back button, title, story, task, hint, mount point */
+function puzzleShell(lock, storyText, taskText){
+  clear();
+  const card = el("div","card");
+  const back = el("button","ghost","← zurück zur Truhe"); back.onclick=renderHub;
+  card.appendChild(back);
+  card.appendChild(el("p","chap",`Schloss ${lock.id} von 5`));
+  card.appendChild(el("h2",null,lock.name));
+  if(storyText) card.appendChild(el("p","story",storyText));
+  if(taskText)  card.appendChild(el("p","task",taskText));
+  const mount = el("div"); card.appendChild(mount);
+  const fb = el("div","feedback"); card.appendChild(fb);
+  const hintArea = el("div"); card.appendChild(hintArea);
+
+  // hint system
+  let hintIdx = 0;
+  const hintBtn = el("button","ghost","💡 Hinweis"); hintBtn.style.marginTop="14px";
+  hintBtn.onclick = ()=>{
+    if(hintIdx < lock.hints.length){
+      hintArea.appendChild(el("div","hint-box","💡 "+lock.hints[hintIdx])); hintIdx++;
+      if(hintIdx>=lock.hints.length) hintBtn.disabled=true;
+    }
+  };
+  card.appendChild(hintBtn);
+  app.appendChild(card);
+  scrollTop();
+  return { card, mount, fb };
+}
+
+function win(shell, lock){
+  markSolved(lock.id);
+  burst();
+  const p = el("div","prize", `✨ Schloss geknackt! Deine Ziffer:<br><span class="digit">${lock.digit}</span>`);
+  shell.mount.after(p);
+  const cont = el("button","gold","Weiter zur Truhe →"); cont.style.marginTop="14px";
+  cont.onclick = renderHub; p.after(cont);
+}
+
+/* ================================================================= *
+ *  LOCK 1 — VIGENÈRE CIPHER (keyword: STERN  →  digit 6)
+ * ================================================================= */
+const VIG_CIPHER = "LIYREQLW KIHOW HS EEAE HLNRV RNWAJ DZSBIY NWK QEI GFLC QAV ZJMKRJ IPSIJ JQIYKICF";
+function vigDecode(txt, key){
+  if(!key) return "";
+  let ki=0;
+  return txt.replace(/[A-Z]/g, c => {
+    const k = key.charCodeAt(ki%key.length)-65; ki++;
+    return String.fromCharCode((c.charCodeAt(0)-65-k+26)%26+65);
+  });
+}
+function lock1(lock){
+  const s = puzzleShell(lock,
+    "„Manche Worte sind zu kostbar, um sie offen zu zeigen – also habe ich sie mit einem Schlüsselwort verschlossen.“",
+    "Das ist eine Vigenère-Chiffre: Jeder Buchstabe ist um einen anderen Wert verschoben – je nach Schlüsselwort. Durchprobieren hilft nicht; finde das Wort.");
+  const wrap = el("div");
+  wrap.innerHTML = `
+    <div class="cipher-io"><div class="lbl">Verschlüsselte Nachricht</div><div class="ct">${VIG_CIPHER}</div></div>
+    <div class="hint-box" style="color:var(--soft);border-color:var(--edge);background:rgba(255,255,255,.05)">
+      🗝️ Das Schlüsselwort steht nicht offen da – es versteckt sich in diesem kleinen Gedicht.
+      <div style="font-style:italic;color:var(--gold2);margin-top:10px;line-height:1.9">
+        Fern von dir zähle ich die Tage,<br>
+        Erinnerungen wärmen jede Nacht,<br>
+        Ruhelos wandert mein Herz zu dir,<br>
+        Niemals bist du wirklich weit,<br>
+        Wieder und wieder denke ich an uns,<br>
+        Ein einziges Wort bringt dich zurück,<br>
+        Halte es fest – es ist der Schlüssel.
+      </div>
+    </div>`;
+  const kwRow = el("div","row"); kwRow.style.marginTop="14px";
+  const kw = el("input"); kw.type="text"; kw.placeholder="Schlüsselwort eingeben …"; kw.autocomplete="off"; kw.spellcheck=false;
+  kw.style.flex="1"; kw.style.textTransform="uppercase"; kw.style.letterSpacing="3px";
+  kwRow.appendChild(kw); wrap.appendChild(kwRow);
+
+  const io2 = el("div","cipher-io"); io2.style.marginTop="12px";
+  io2.innerHTML = `<div class="lbl">Entschlüsselt</div><div class="pt" id="pt2">…</div>`;
+  wrap.appendChild(io2);
+
+  const digitWrap = el("div","hidden"); digitWrap.style.marginTop="16px";
+  digitWrap.innerHTML = `<p class="task" style="margin-bottom:8px">Der Brief verrät dir, wie du deine Ziffer findest.</p>`;
+  const dRow = el("div","row"); const dInp=el("input"); dInp.type="tel"; dInp.maxLength=1; dInp.inputMode="numeric";
+  dInp.placeholder="deine Ziffer"; dInp.style.flex="1"; const dGo=el("button",null,"Prüfen");
+  dRow.appendChild(dInp); dRow.appendChild(dGo); digitWrap.appendChild(dRow);
+  wrap.appendChild(digitWrap);
+  s.mount.appendChild(wrap);
+
+  const pt2 = wrap.querySelector("#pt2");
+  const KEYWORD = "FERNWEH";
+  let unlocked=false;
+  kw.addEventListener("input", ()=>{
+    const key = kw.value.toUpperCase().replace(/[^A-Z]/g,"");
+    pt2.textContent = key ? vigDecode(VIG_CIPHER, key) : "…";
+    if(!unlocked && key===KEYWORD){
+      unlocked=true; pt2.style.color="var(--ok)"; kw.disabled=true;
+      s.fb.className="feedback ok"; s.fb.textContent="Das Schlüsselwort stimmt! Lies den Brief …";
+      digitWrap.classList.remove("hidden"); dInp.focus();
+    }
+  });
+  const submit = ()=>{
+    if(dInp.value.trim()===String(lock.digit)){ dGo.disabled=true; dInp.disabled=true; setTimeout(()=>win(s,lock),600); }
+    else { s.fb.className="feedback bad"; s.fb.textContent="Diese Ziffer stimmt noch nicht – wie viele Seiten hat ein Würfel?"; dInp.select(); }
+  };
+  dGo.onclick=submit; dInp.addEventListener("keydown", e=>{ if(e.key==="Enter") submit(); });
+}
+
+/* ================================================================= *
+ *  LOCK 2 — JIGSAW (swap + rotate)
+ * ================================================================= */
+function jigsawSceneURI(){
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'>
+    <defs><linearGradient id='s' x1='0' y1='0' x2='0' y2='1'>
+      <stop offset='0' stop-color='#1a1140'/><stop offset='.55' stop-color='#3b1f5a'/><stop offset='1' stop-color='#8a3d5a'/></linearGradient>
+      <radialGradient id='m'><stop offset='0' stop-color='#fff7de'/><stop offset='1' stop-color='#f4c46a'/></radialGradient></defs>
+    <rect width='600' height='600' fill='url(#s)'/>
+    <circle cx='450' cy='140' r='60' fill='url(#m)'/>
+    ${Array.from({length:70}).map((_,i)=>{const x=(i*97+30)%590,y=(i*53+15)%330,r=(i%3)*0.6+0.6;return `<circle cx='${x}' cy='${y}' r='${r}' fill='#fff' opacity='${0.4+(i%5)*0.12}'/>`;}).join("")}
+    <path d='M0,430 Q150,400 300,430 T600,430 L600,600 L0,600 Z' fill='#6b3f2a'/>
+    <path d='M0,470 Q150,450 300,470 T600,470 L600,600 L0,600 Z' fill='#8a5636'/>
+    <path d='M300,545 C300,520 268,512 268,540 C268,565 300,580 300,580 C300,580 332,565 332,540 C332,512 300,520 300,545 Z' fill='#ff7fa5' opacity='.92'/>
+    <text x='300' y='556' text-anchor='middle' font-family='Georgia,serif' font-size='34' font-weight='700' fill='#4a1226'>9</text>
+    <text x='300' y='300' text-anchor='middle' font-family='Georgia,serif' font-size='26' fill='#ffe6a8' opacity='.9'>unter unseren Sternen</text>
+  </svg>`;
+  return "data:image/svg+xml,"+encodeURIComponent(svg);
+}
+function lock2(lock){
+  const s = puzzleShell(lock,
+    "„Ein Bild von uns – in Scherben. Setz es wieder zusammen.“",
+    "Tausche und drehe die Kacheln, bis das Bild stimmt. Erst dann gibt es die versteckte Ziffer preis.");
+  const board = el("div","jig");
+  const controls = el("div","row"); controls.style.justifyContent="center"; controls.style.marginTop="12px";
+  const rotBtn = el("button","ghost","↻ Kachel drehen"); rotBtn.disabled=true;
+  controls.appendChild(rotBtn);
+  const overlay = el("div","jig-overlay");
+  s.mount.appendChild(board); s.mount.appendChild(controls); s.mount.appendChild(overlay);
+
+  // deterministic-ish scramble (no Math.random dependency for reproducibility not needed here, but fine)
+  const N=3, total=9;
+  // tiles: each object {correct: index it belongs to} ; grid position = array index
+  let tiles = []; for(let i=0;i<total;i++) tiles.push({correct:i, rot:0});
+  // scramble positions and rotations, ensure not already solved
+  function scramble(){
+    for(let i=total-1;i>0;i--){ const j=Math.floor(((i*7+3)%(i+1))); [tiles[i],tiles[j]]=[tiles[j],tiles[i]]; }
+    tiles.forEach((t,i)=>{ t.rot = [90,180,270,90,180,90,270,180,90][i]; });
+  }
+  scramble();
+  let sel=-1, imgURL=null, solved=false;
+
+  function isSolved(){ return tiles.every((t,i)=> t.correct===i && (t.rot%360)===0); }
+  function draw(){
+    board.innerHTML="";
+    tiles.forEach((t,i)=>{
+      const d=el("div","tile"+(sel===i?" sel":""));
+      const r=Math.floor(t.correct/N), c=t.correct%N;
+      d.style.backgroundImage=`url("${imgURL}")`;
+      d.style.backgroundPosition=`${c*50}% ${r*50}%`;
+      d.style.transform=`rotate(${t.rot}deg)`;
+      d.onclick=()=>{
+        if(solved) return;
+        if(sel===-1){ sel=i; rotBtn.disabled=false; }
+        else if(sel===i){ sel=-1; rotBtn.disabled=true; }
+        else { [tiles[sel],tiles[i]]=[tiles[i],tiles[sel]]; sel=-1; rotBtn.disabled=true; check(); }
+        draw();
+      };
+      board.appendChild(d);
+    });
+  }
+  rotBtn.onclick=()=>{ if(sel<0||solved)return; tiles[sel].rot=(tiles[sel].rot+90)%360; draw(); check(); };
+  function check(){
+    if(!solved && isSolved()){
+      solved=true; sel=-1; rotBtn.disabled=true; draw();
+      overlay.innerHTML=`<div style="color:var(--gold2);font-style:italic;margin-top:6px">„Wieder heil – so wie dieser Moment in meiner Erinnerung.“</div>`;
+      s.fb.className="feedback ok"; s.fb.textContent="Das Bild ist vollständig!";
+      setTimeout(()=>win(s,lock),900);
+    }
+  }
+  // use the first photo that loads (puzzle.jpg or leipzig.jpg), else the drawn scene
+  firstImage(["images/puzzle.jpg","images/leipzig.jpg"], (url)=>{ imgURL = url || jigsawSceneURI(); draw(); });
+}
+
+/* ================================================================= *
+ *  LOCK 3 — FLASHLIGHT
+ * ================================================================= */
+function lock3(lock){
+  const s = puzzleShell(lock,
+    "„Im Dunkeln verbirgt sich mehr, als man denkt. Bring Licht hinein – aber schau ganz genau hin.“",
+    "Irgendwo im Dunkeln steht eine Botschaft – und die Regel, wie du sie lesen musst. Der Lichtkegel ist klein, also leuchte wirklich jede Ecke ab.");
+  const torch = el("div","torch hard");
+  // gold letters spell VIER when read by their small index numbers; red letters are decoys
+  const gold=[{ch:"V",sub:1,x:13,y:22},{ch:"I",sub:2,x:85,y:31},{ch:"E",sub:3,x:37,y:80},{ch:"R",sub:4,x:73,y:65}];
+  const red =[{ch:"K",x:57,y:13},{ch:"X",x:22,y:57},{ch:"Z",x:91,y:85},{ch:"Q",x:49,y:47},{ch:"B",x:9,y:88}];
+  gold.forEach(o=>{ const e=el("div","num gold"); e.innerHTML=`${o.ch}<sub style="font-size:.5em;color:#fff;font-weight:400">${o.sub}</sub>`;
+    e.style.left=o.x+"%"; e.style.top=o.y+"%"; torch.appendChild(e); });
+  red.forEach(o=>{ const e=el("div","num red",o.ch); e.style.left=o.x+"%"; e.style.top=o.y+"%"; torch.appendChild(e); });
+  // the hidden rule, tucked into a corner so it must be found
+  const rule=el("div","num gold","Regel: nur Gold · nach Zahl ordnen");
+  rule.style.left="50%"; rule.style.top="95%"; rule.style.fontSize="13px"; rule.style.whiteSpace="nowrap"; rule.style.fontWeight="600";
+  torch.appendChild(rule);
+  const cover=el("div","cover"); const beam=el("div","beam");
+  torch.appendChild(cover); torch.appendChild(beam);
+  function move(ev){ const r=torch.getBoundingClientRect(); const x=ev.clientX-r.left, y=ev.clientY-r.top;
+    torch.style.setProperty("--x",x+"px"); torch.style.setProperty("--y",y+"px"); }
+  torch.addEventListener("pointermove",move);
+  torch.addEventListener("pointerdown",move);
+  s.mount.appendChild(torch);
+
+  const q=el("div","row"); q.style.marginTop="14px";
+  const inp=el("input"); inp.type="text"; inp.placeholder="die Botschaft (Wort oder Ziffer)"; inp.autocomplete="off"; inp.style.flex="1";
+  const go=el("button",null,"Prüfen");
+  q.appendChild(inp); q.appendChild(go); s.mount.appendChild(q);
+  const submit=()=>{
+    const v=inp.value.trim().toLowerCase();
+    if(v==="vier" || v==="4"){ s.fb.className="feedback ok"; s.fb.textContent="Genau – VIER!"; go.disabled=true; inp.disabled=true; setTimeout(()=>win(s,lock),700); }
+    else { s.fb.className="feedback bad"; s.fb.textContent="Noch nicht. Hast du ALLE goldenen Buchstaben gefunden und in der Reihenfolge ihrer kleinen Zahlen gelesen? (Rot sind Fallen.)"; inp.select(); }
+  };
+  go.onclick=submit; inp.addEventListener("keydown",e=>{ if(e.key==="Enter") submit(); });
+}
+
+/* ================================================================= *
+ *  LOCK 4 — DAS KREUZ DES SÜDENS (connect brightest→dimmest)
+ * ================================================================= */
+function lock4(lock){
+  const s = puzzleShell(lock,
+    "„Erinnerst du dich an den Nachthimmel der Südhalbkugel – über Neuseeland, über Australien? Zeichne unser Sternbild.“",
+    "Verbinde die fünf Sterne in der richtigen Reihenfolge: vom hellsten (größten) zum dunkelsten (kleinsten).");
+  const NS="http://www.w3.org/2000/svg";
+  const W=440,H=310;
+  const svg=document.createElementNS(NS,"svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.setAttribute("class","constel"); svg.setAttribute("width","100%");
+  // Kreuz des Südens (Crux): 5 Sterne, Radius = echte Helligkeit (alle verschieden)
+  // 0 Acrux(unten, hellste) 1 Gacrux(oben) 2 Becrux(links) 3 Delta(rechts) 4 Epsilon(klein, mitte)
+  const stars=[
+    {x:215,y:258,r:10.0},  // Acrux  (α) – hellster
+    {x:215,y:55, r:6.5 },  // Gacrux (γ) – oben
+    {x:120,y:150,r:8.0 },  // Becrux (β) – links
+    {x:315,y:140,r:5.0 },  // Delta  (δ) – rechts
+    {x:255,y:196,r:3.5 }   // Epsilon(ε) – dunkelster
+  ];
+  const order = stars.map((st,i)=>i).sort((a,b)=>stars[b].r-stars[a].r); // hellster zuerst
+  const cross=document.createElementNS(NS,"g"); svg.appendChild(cross);   // canonical lines (on solve)
+  const line=document.createElementNS(NS,"polyline");
+  line.setAttribute("fill","none"); line.setAttribute("stroke","#ffe6a8"); line.setAttribute("stroke-width","2"); line.setAttribute("stroke-linecap","round");
+  svg.appendChild(line);
+  let progress=[], solved=false;
+  const dots=[];
+  stars.forEach((st,i)=>{
+    const c=document.createElementNS(NS,"circle");
+    c.setAttribute("cx",st.x); c.setAttribute("cy",st.y); c.setAttribute("r",st.r);
+    c.setAttribute("fill","#fff"); c.setAttribute("class","star");
+    c.style.filter=`drop-shadow(0 0 ${st.r}px rgba(255,240,200,.9))`;
+    c.onclick=()=>{
+      if(solved) return;
+      if(i===order[progress.length]){
+        progress.push(i); paint();
+        if(progress.length===stars.length){
+          solved=true;
+          line.setAttribute("points","");                 // clear the brightness path
+          [[1,0],[2,3]].forEach(([a,b])=>{                 // draw the actual cross
+            const ln=document.createElementNS(NS,"line");
+            ln.setAttribute("x1",stars[a].x); ln.setAttribute("y1",stars[a].y);
+            ln.setAttribute("x2",stars[b].x); ln.setAttribute("y2",stars[b].y);
+            ln.setAttribute("stroke","#ffe6a8"); ln.setAttribute("stroke-width","2.5"); ln.setAttribute("stroke-linecap","round");
+            cross.appendChild(ln);
+          });
+          const lbl=document.createElementNS(NS,"text");
+          lbl.setAttribute("x",W/2); lbl.setAttribute("y",300); lbl.setAttribute("text-anchor","middle");
+          lbl.setAttribute("fill","#ffe6a8"); lbl.setAttribute("font-size","14"); lbl.setAttribute("font-style","italic");
+          lbl.textContent="✦ Das Kreuz des Südens ✦"; svg.appendChild(lbl);
+          s.fb.className="feedback ok"; s.fb.textContent="Das Kreuz des Südens leuchtet – es zeigt nach Süden, den Weg nach Hause zu dir.";
+          setTimeout(()=>win(s,lock),1300);
+        }
+      } else {
+        progress=[]; paint(); s.fb.className="feedback bad"; s.fb.textContent="Diese Reihenfolge stimmt nicht. Beginn beim hellsten (größten) Stern.";
+      }
+    };
+    dots.push(c); svg.appendChild(c);
+  });
+  function paint(){
+    line.setAttribute("points", progress.map(i=>`${stars[i].x},${stars[i].y}`).join(" "));
+    dots.forEach((c,i)=> c.setAttribute("fill", progress.includes(i)?"#ffe6a8":"#fff"));
+  }
+  s.mount.appendChild(svg);
+}
+
+/* ================================================================= *
+ *  LOCK 5 — EMOJI ALGEBRA
+ * ================================================================= */
+function lock5(lock){
+  const s = puzzleShell(lock,
+    "„Alles an uns lässt sich auf eine Sache zurückführen.“",
+    "Löse die Gleichungen und finde den Wert des Herzens.");
+  const box=el("div");
+  box.innerHTML=`
+    <div class="eq">🌙 + 🌙 = 8</div>
+    <div class="eq">🌙 + ⭐ = 7</div>
+    <div class="eq">⭐ × ❤️ = 21</div>
+    <div class="eq">❤️ = <span class="q">?</span></div>`;
+  s.mount.appendChild(box);
+  const q=el("div","row"); q.style.justifyContent="center"; q.style.marginTop="8px";
+  const inp=el("input"); inp.type="tel"; inp.maxLength=2; inp.placeholder="❤️ = ?"; inp.style.width="120px"; inp.style.textAlign="center";
+  const go=el("button",null,"Prüfen"); q.appendChild(inp); q.appendChild(go); s.mount.appendChild(q);
+  const submit=()=>{
+    if(inp.value.trim()===String(lock.digit)){ s.fb.className="feedback ok"; s.fb.textContent="Richtig – das Herz ist die Sieben."; go.disabled=true; inp.disabled=true; setTimeout(()=>win(s,lock),700); }
+    else { s.fb.className="feedback bad"; s.fb.textContent="Rechne nochmal: erst 🌙, dann ⭐, dann ❤️."; inp.select(); }
+  };
+  go.onclick=submit; inp.addEventListener("keydown",e=>{ if(e.key==="Enter") submit(); });
+}
+
+const BUILDERS={1:lock1,2:lock2,3:lock3,4:lock4,5:lock5};
+function openLock(id){
+  const lock=LOCKS.find(l=>l.id===id);
+  if(isSolved(id)){ // replay allowed but show it's done
+    // just reopen the puzzle fresh
+  }
+  BUILDERS[id](lock);
+}
+
+/* ================================================================= *
+ *  CHEST + FINALE
+ * ================================================================= */
+function openChest(){
+  clear();
+  const card=el("div","card center");
+  const back=el("button","ghost","← zurück"); back.onclick=renderHub; back.style.float="left"; card.appendChild(back);
+  card.appendChild(el("div",null,`<div style="font-size:52px">🧰</div>`));
+  card.appendChild(el("h2",null,"Die Schatztruhe"));
+  const done=solvedCount();
+  card.appendChild(el("p","story", done===5
+    ? "Fünf Ziffern, fünf Erinnerungen. Gib sie in der Reihenfolge der Schlösser (1 → 5) ein."
+    : `Erst wenn du alle fünf Schlösser geknackt hast, kannst du die Truhe öffnen.\nBisher: ${done} von 5.`));
+
+  if(done===5){
+    const dials=el("div","dials");
+    const ins=[];
+    for(let i=0;i<5;i++){ const inp=el("input"); inp.type="tel"; inp.maxLength=1; inp.inputMode="numeric";
+      inp.addEventListener("input",()=>{ inp.value=inp.value.replace(/\D/g,"").slice(0,1); if(inp.value&&i<4) ins[i+1].focus(); });
+      ins.push(inp); dials.appendChild(inp); }
+    card.appendChild(dials);
+    const fb=el("div","feedback"); card.appendChild(fb);
+    const open=el("button","gold","🔓 Öffnen"); card.appendChild(open);
+    // helper: show the notebook of found digits
+    const nb=el("p","note-small","Dein Notizbuch: "+LOCKS.map(l=>`S${l.id}=${l.digit}`).join("  ·  "));
+    card.appendChild(nb);
+    open.onclick=()=>{
+      const guess=ins.map(x=>x.value).join("");
+      if(guess===CODE){ renderFinale(); }
+      else { fb.className="feedback bad"; fb.textContent="Die Truhe bleibt zu. Prüf die Reihenfolge (Schloss 1 → 5)."; }
+    };
+  }
+  app.appendChild(card); scrollTop();
+}
+
+function finaleSceneURI(){
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='600' height='420'>
+    <defs><radialGradient id='g'><stop offset='0' stop-color='#ffe6a8'/><stop offset='1' stop-color='#8a3d5a'/></radialGradient></defs>
+    <rect width='600' height='420' fill='#2a1533'/>
+    <ellipse cx='300' cy='250' rx='240' ry='140' fill='url(#g)' opacity='.5'/>
+    <rect x='190' y='230' width='220' height='120' rx='12' fill='#7a4a22'/>
+    <rect x='190' y='210' width='220' height='40' rx='10' fill='#5c3417' transform='rotate(-6 300 210)'/>
+    <rect x='250' y='285' width='100' height='30' rx='6' fill='#f4c46a'/>
+    ${Array.from({length:16}).map((_,i)=>{const x=200+i*13,y=200-(i%4)*20;return `<text x='${x}' y='${y}' font-size='${14+(i%3)*8}' fill='#ff7fa5'>❤</text>`;}).join("")}
+  </svg>`;
+  return "data:image/svg+xml,"+encodeURIComponent(svg);
+}
+function renderFinale(){
+  clear();
+  const card=el("div","card center");
+  card.appendChild(el("div","big-heart","❤️"));
+  card.appendChild(el("div","finale-line","Ich liebe dich"));
+  const img=el("img","photo"); img.alt="";
+  img.onerror=()=>{ img.onerror=null; img.src=finaleSceneURI(); };
+  img.src="images/finale.jpg";
+  card.appendChild(img);
+  card.appendChild(el("p","finale-note",
+    "Du hast jedes Schloss geknackt – so wie du jeden Tag mein Herz aufs Neue öffnest.\n"+
+    "Danke, dass du diese kleine Reise mit mir gegangen bist.\n\n"+
+    "Ich freue mich riesig, dich nächste Woche in Leipzig endlich wieder in die Arme zu schließen.\n\nBis ganz bald,\nDein Martin"));
+  app.appendChild(card);
+  celebrate();
+  scrollTop();
+}
+
+/* ================================================================= *
+ *  ambient hearts + bursts
+ * ================================================================= */
+const sky=document.getElementById("sky");
+const glyphs=["💗","✨","💖","⭐","🩷","💫","🗝️"];
+function spawn(){ const s=el("div","floatie",glyphs[Math.floor(Math.random()*glyphs.length)]);
+  s.style.left=(Math.random()*100)+"vw"; s.style.fontSize=(12+Math.random()*20)+"px";
+  const d=9+Math.random()*9; s.style.animationDuration=d+"s"; sky.appendChild(s);
+  setTimeout(()=>s.remove(), d*1000+500); }
+setInterval(spawn,1000); for(let i=0;i<5;i++) setTimeout(spawn,i*300);
+function burst(){ for(let i=0;i<12;i++) setTimeout(spawn,i*55); }
+function celebrate(){ let n=0; const iv=setInterval(()=>{ burst(); if(++n>=7) clearInterval(iv); },500); }
+
+function scrollTop(){ window.scrollTo({top:0,behavior:"smooth"}); }
+
+/* ---------- reset ---------- */
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  if(confirm("Fortschritt wirklich löschen und neu beginnen?")){ localStorage.removeItem(STORE); state={solved:{}}; renderHub(); }
+});
+
+/* ---------- boot ---------- */
+saveState();
+const view=params.get("view");
+if(view==="finale") renderFinale();
+else if(view==="chest") openChest();
+else if(view && view.startsWith("lock")) openLock(parseInt(view.slice(4),10));
+else renderHub();
+</script>
+</body>
+</html>
